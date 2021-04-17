@@ -1,0 +1,81 @@
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QPixmap
+from os import *
+from PIL import Image
+app = QApplication([])
+window = QWidget()
+window.setWindowTitle("Easy Editor")
+window.resize(900, 500)
+main_layout = QHBoxLayout()
+V_layout_1 = QVBoxLayout()
+V_layout_2 = QVBoxLayout()
+H_layout_3 = QHBoxLayout()
+workdir = ''
+folder_button = QPushButton("Папка")
+left_button = QPushButton("Лево")
+right_button = QPushButton("Право")
+mirror_button = QPushButton("Зеркало")
+sharpness_button = QPushButton("Резкость")
+white_black_button = QPushButton("Ч/Б")
+list_with_elem = QListWidget()
+list_with_elem.setFixedSize(145, 450)
+picture_write = QLabel("Картинка")
+result = []
+def chooseWorkdir():
+    global workdir
+    workdir = QFileDialog.getExistingDirectory()
+def filter1(names_files, extensions):
+    for namefile in names_files:
+        for extension in extensions:
+            graph_name_file = namefile.endswith(extension)
+            if graph_name_file:
+                result.append(namefile)
+                break
+    return result
+def showFilenamesList():
+    chooseWorkdir()
+    names_files = listdir(workdir)
+    extensions = ["png", "jpg"]
+    files = filter1(names_files, extensions)
+    list_with_elem.clear()
+    list_with_elem.addItems(files)
+class ImageProcessor():
+    def __init__(self):
+        self.now_image = None
+        self.now_name_file = None
+    def loadimage(self, now_name_file):
+        self.now_name_file = now_name_file
+        path_file = path.join(workdir, self.now_name_file)
+        with Image.open(path_file) as f:
+            self.now_image = f
+    def showImage(self, path):
+        self.now_image.hide()
+        pixmapimage = QPixmap(path)
+        w, h = self.now_image.width(), self.now_image.height()
+        pixmapimage = pixmapimage.scaled(w, h, Qt.KeepAspectRatio)
+        self.now_image.setPixmap(pixmapimage)
+        self.now_image.show()
+workimage = ImageProcessor()
+def showChosenImage():
+    #if list_with_elem.itemClicked:
+    name_file1 = list_with_elem.selectedItems()[0].text()
+    workimage.loadimage(name_file1)
+    path1 = path.join(workdir, name_file1)
+    workimage.showImage(path1)
+V_layout_2.addWidget(folder_button, stretch=2)
+V_layout_2.addWidget(list_with_elem)
+H_layout_3.addWidget(left_button)
+H_layout_3.addWidget(right_button)
+H_layout_3.addWidget(mirror_button)
+H_layout_3.addWidget(sharpness_button)
+H_layout_3.addWidget(white_black_button)
+V_layout_1.addWidget(picture_write)
+V_layout_1.addLayout(H_layout_3)
+main_layout.addLayout(V_layout_2)
+main_layout.addLayout(V_layout_1)
+window.setLayout(main_layout)
+folder_button.clicked.connect(showFilenamesList)
+list_with_elem.itemClicked.connect(showChosenImage)
+window.show()
+app.exec_()
